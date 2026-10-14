@@ -1,9 +1,11 @@
 const pokemonList = document.getElementById('pokemonList')
 const loadMoreButton = document.getElementById('loadMoreButton')
+const loadStatus = document.getElementById('loadStatus')
 
 const maxRecords = 151
 const limit = 10
 let offset = 0;
+let loading = false;
 
 function convertPokemonToLi(pokemon) {
     return `
@@ -23,25 +25,31 @@ function convertPokemonToLi(pokemon) {
     `
 }
 
-function loadPokemonItens(offset, limit) {
-    pokeApi.getPokemons(offset, limit).then((pokemons = []) => {
+async function loadPokemonItens() {
+    if (loading || offset >= maxRecords) return
+    loading = true
+    loadMoreButton.disabled = true
+    loadMoreButton.textContent = 'Carregando...'
+    loadStatus.textContent = 'Carregando Pokémon...'
+    try {
+        const pageLimit = Math.min(limit, maxRecords - offset)
+        const pokemons = await pokeApi.getPokemons(offset, pageLimit)
+        if (pokemons.length !== pageLimit) throw new Error('Página incompleta')
         const newHtml = pokemons.map(convertPokemonToLi).join('')
-        pokemonList.innerHTML += newHtml
-    })
+        pokemonList.insertAdjacentHTML('beforeend', newHtml)
+        offset += pokemons.length
+        loadStatus.textContent = `${offset} de ${maxRecords} Pokémon carregados.`
+        loadMoreButton.hidden = offset >= maxRecords
+        loadMoreButton.textContent = 'Carregar mais'
+    } catch {
+        loadStatus.textContent = 'Não foi possível carregar. Verifique a conexão e tente novamente.'
+        loadMoreButton.textContent = 'Tentar novamente'
+    } finally {
+        loading = false
+        loadMoreButton.disabled = false
+    }
 }
 
-loadPokemonItens(offset, limit)
+loadPokemonItens()
 
-loadMoreButton.addEventListener('click', () => {
-    offset += limit
-    const qtdRecordsWithNexPage = offset + limit
-
-    if (qtdRecordsWithNexPage >= maxRecords) {
-        const newLimit = maxRecords - offset
-        loadPokemonItens(offset, newLimit)
-
-        loadMoreButton.parentElement.removeChild(loadMoreButton)
-    } else {
-        loadPokemonItens(offset, limit)
-    }
-})
+loadMoreButton.addEventListener('click', loadPokemonItens)
