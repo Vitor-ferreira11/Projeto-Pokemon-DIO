@@ -1,5 +1,7 @@
 # Pokédex — primeira geração
 
+**[Abrir demonstração](https://vitor-ferreira11-pokedex.cozyseed5.chatgpt.site)**
+
 Projeto educacional em HTML, CSS e JavaScript que consulta a PokéAPI e exibe os primeiros 151 Pokémon, com nome, número, tipos e imagem.
 
 ## Executar
